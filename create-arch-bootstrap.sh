@@ -14,7 +14,7 @@ video_pkgs="mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon \
 	vulkan-icd-loader lib32-vulkan-icd-loader vulkan-mesa-layers \
 	lib32-vulkan-mesa-layers libva-mesa-driver lib32-libva-mesa-driver \
 	libva-intel-driver lib32-libva-intel-driver intel-media-driver \
-	mesa-utils vulkan-tools libva-utils lib32-mesa-utils"
+	mesa-utils vulkan-tools libva-utils lib32-mesa-utils vulkan-swrast"
 
 wine_pkgs="wine-staging winetricks-git wine-nine wineasio \
 	giflib lib32-giflib libpng lib32-libpng libldap lib32-libldap \
@@ -34,18 +34,7 @@ devel_pkgs="base-devel git meson mingw-w64-gcc cmake"
 # You can add packages that you want and remove packages that you don't need
 # Apart from packages from the official Arch repos, you can also specify
 # packages from the Chaotic-AUR repo
-export packagelist="${audio_pkgs} ${video_pkgs} ${wine_pkgs} ${devel_pkgs} \
-	nano ttf-dejavu ttf-liberation lutris steam firefox mpv geany pcmanfm \
-	htop qbittorrent speedcrunch gpicview file-roller xorg-xwayland \
-	steam-native-runtime gamemode lib32-gamemode jre17-openjdk lxterminal \
-	steamtinkerlaunch mangohud lib32-mangohud qt6-wayland wayland \
-	lib32-wayland qt5-wayland retroarch xorg-server-xephyr openbox \
-	obs-studio gamehub minigalaxy legendary gamescope prismlauncher yt-dlp \
-	bottles playonlinux minizip retroarch-assets-ozone libretro-beetle-psx-hw \
-	libretro-blastem libretro-bsnes libretro-dolphin duckstation \
-	libretro-gambatte libretro-melonds libretro-mgba libretro-nestopia \
-	libretro-parallel-n64 libretro-pcsx2 libretro-picodrive libretro-ppsspp \
-	libretro-retrodream libretro-yabause sunshine nautilus genymotion"
+export packagelist="${video_pkgs}"
 
 # If you want to install AUR packages, specify them in this variable
 export aur_packagelist=""
