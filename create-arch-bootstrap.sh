@@ -415,8 +415,12 @@ TMP_DIR="${bootstrap}/tmp"
 # Destination for binaries
 DEST_DIR="${bootstrap}/usr/local"
 
-# Ensure temporary directory exists
+# Directory for symbolic links
+SYMLINK_DIR="/usr/local/bin"
+
+# Ensure temporary and symbolic link directories exist
 mkdir -p "${TMP_DIR}"
+mkdir -p "${SYMLINK_DIR}"
 
 # --- Function to install Wine versions ---
 install_wine() {
@@ -451,6 +455,10 @@ install_wine() {
     echo "Installing Wine ${WINE_VERSION} binaries to ${DEST_DIR}/wine-${WINE_VERSION}..."
     mkdir -p "${DEST_DIR}/wine-${WINE_VERSION}"
     cp -r "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}"/* "${DEST_DIR}/wine-${WINE_VERSION}/"
+
+    # Create symbolic link for this version
+    echo "Creating symbolic link for Wine ${WINE_VERSION}..."
+    ln -sf "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" "${SYMLINK_DIR}/wine-${WINE_VERSION}"
 
     # Clean up temporary files for this version
     rm -rf "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}"
@@ -490,6 +498,10 @@ install_proton_exp() {
     mkdir -p "${DEST_DIR}/wine-${PROTON_VERSION}"
     cp -r "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}"/* "${DEST_DIR}/wine-${PROTON_VERSION}/"
 
+    # Create symbolic link for Proton Experimental
+    echo "Creating symbolic link for Wine Proton Experimental ${PROTON_VERSION}..."
+    ln -sf "${DEST_DIR}/wine-${PROTON_VERSION}/bin/wine" "${SYMLINK_DIR}/wine-${PROTON_VERSION}"
+
     # Clean up temporary files for Proton Experimental
     rm -rf "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}"
     rm -f "${TARGET_FILE}"
@@ -528,6 +540,10 @@ install_ge_proton() {
     mkdir -p "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}"
     cp -r "${TMP_DIR}/${GE_PROTON_VERSION}"/* "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}/"
 
+    # Create symbolic link for GE-Proton
+    echo "Creating symbolic link for GE-Proton ${GE_PROTON_VERSION}..."
+    ln -sf "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}/bin/wine" "${SYMLINK_DIR}/ge-proton-${GE_PROTON_VERSION}"
+
     # Clean up temporary files for GE-Proton
     rm -rf "${TMP_DIR}/${GE_PROTON_VERSION}"
     rm -f "${TARGET_FILE}"
@@ -554,6 +570,7 @@ echo "Installation completed for:"
 echo "  - Wine versions: ${WINE_VERSIONS[*]}"
 echo "  - Wine Proton Experimental ${PROTON_VERSION}"
 echo "  - GE-Proton ${GE_PROTON_VERSION}"
+echo "Symbolic links created in ${SYMLINK_DIR}."
 
 clear
 echo "Done"
