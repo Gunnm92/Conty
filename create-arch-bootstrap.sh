@@ -404,7 +404,7 @@ ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/f
 # Define Wine versions, Proton Experimental version, GE-Proton version, and their respective URLs
 WINE_VERSIONS=("9.22" "7.20")
 PROTON_VERSION="proton-exp-9.0"
-GE_PROTON_VERSION="GE-Proton8-20"
+GE_PROTON_VERSION="GE-Proton9-20"
 ARCHITECTURE="amd64"
 BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
 BASE_GE_PROTON_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
