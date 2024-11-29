@@ -402,175 +402,88 @@ ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/f
 
 # Add some wine version
 # Define Wine versions, Proton Experimental version, GE-Proton version, and their respective URLs
+# Configuration des versions, architectures et répertoires
 WINE_VERSIONS=("9.22" "7.20")
 PROTON_VERSION="proton-exp-9.0"
-GE_PROTON_VERSION="GE-Proton9-20"
-ARCHITECTURE="amd64"
+GE_CUSTOM_VERSION="GE-Custom9-20"
+ARCHITECTURE="${ARCHITECTURE:-amd64}"
 BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
-BASE_GE_PROTON_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
+BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
 
-# Temporary directory within the bootstrap
-TMP_DIR="${bootstrap}/tmp"
+# Répertoires
+TMP_DIR="${bootstrap:-/tmp}/tmp"
+DEST_DIR="${bootstrap:-/usr/local}/usr/local"
+SYMLINK_DIR="/usr/bin" # Modifié pour correspondre à /usr/bin
 
-# Destination for binaries
-DEST_DIR="${bootstrap}/usr/local"
+# Création des répertoires nécessaires
+mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
 
-# Directory for symbolic links
-SYMLINK_DIR="/usr/local/bin"
+# Fonction générique pour télécharger, extraire et installer
+download_and_install() {
+    local NAME=$1
+    local VERSION=$2
+    local URL=$3
+    local EXT=$4
+    local DEST=$5
 
-# Ensure temporary and symbolic link directories exist
-mkdir -p "${TMP_DIR}"
-mkdir -p "${SYMLINK_DIR}"
+    local TARGET_FILE="${TMP_DIR}/${NAME}-${VERSION}.${EXT}"
 
-# --- Function to install Wine versions ---
-install_wine() {
-    WINE_VERSION=$1
-    echo "Processing Wine ${WINE_VERSION} (staging) for ${ARCHITECTURE}..."
+    echo "Téléchargement de ${NAME} version ${VERSION}..."
+    curl -#L "${URL}" -o "${TARGET_FILE}"
 
-    # Define download URL and target file
-    WINE_URL="${BASE_WINE_URL}/${WINE_VERSION}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
-    TARGET_FILE="${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
-
-    # Download the Wine binaries
-    echo "Downloading Wine ${WINE_VERSION}..."
-    curl -#L "${WINE_URL}" -o "${TARGET_FILE}"
-
-    # Verify the file exists
     if [ ! -f "${TARGET_FILE}" ]; then
-        echo "Error: Failed to download Wine ${WINE_VERSION}. File not found."
+        echo "Erreur : Échec du téléchargement de ${NAME} version ${VERSION}."
         exit 1
     fi
 
-    # Extract the downloaded archive
-    echo "Extracting Wine ${WINE_VERSION} binaries..."
-    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
-
-    # Verify the extraction succeeded
-    if [ ! -d "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}" ]; then
-        echo "Error: Failed to extract Wine ${WINE_VERSION} binaries."
+    echo "Extraction de ${NAME} version ${VERSION}..."
+    if [[ "${EXT}" == "tar.xz" || "${EXT}" == "tar.gz" ]]; then
+        tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
+    else
+        echo "Format de fichier non pris en charge : ${EXT}"
         exit 1
     fi
 
-    # Move binaries to the appropriate location
-    echo "Installing Wine ${WINE_VERSION} binaries to ${DEST_DIR}/wine-${WINE_VERSION}..."
-    mkdir -p "${DEST_DIR}/wine-${WINE_VERSION}"
-    cp -r "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}"/* "${DEST_DIR}/wine-${WINE_VERSION}/"
+    local EXTRACTED_DIR=$(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+    if [ ! -d "${EXTRACTED_DIR}" ]; then
+        echo "Erreur : Échec de l'extraction de ${NAME} version ${VERSION}."
+        exit 1
+    fi
 
-    # Create symbolic link for this version
-    echo "Creating symbolic link for Wine ${WINE_VERSION}..."
-    ln -sf "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" "${SYMLINK_DIR}/wine-${WINE_VERSION}"
+    echo "Installation de ${NAME} version ${VERSION} dans ${DEST}..."
+    mkdir -p "${DEST}/${NAME}-${VERSION}"
+    cp -r "${EXTRACTED_DIR}"/* "${DEST}/${NAME}-${VERSION}/"
 
-    # Clean up temporary files for this version
-    rm -rf "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}"
-    rm -f "${TARGET_FILE}"
+    echo "Création d'un lien symbolique pour ${NAME} version ${VERSION}..."
+    if [ -x "${DEST}/${NAME}-${VERSION}/bin/wine" ]; then
+        ln -sf "${DEST}/${NAME}-${VERSION}/bin/wine" "${SYMLINK_DIR}/${NAME}-${VERSION}"
+        echo "Lien symbolique créé : ${SYMLINK_DIR}/${NAME}-${VERSION}"
+    else
+        echo "Erreur : Le binaire wine est introuvable ou non exécutable."
+    fi
+
+    rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 }
 
-# --- Function to install Wine Proton Experimental ---
-install_proton_exp() {
-    echo "Processing Wine Proton Experimental ${PROTON_VERSION} for ${ARCHITECTURE}..."
-
-    # Define download URL and target file
-    PROTON_URL="${BASE_WINE_URL}/${PROTON_VERSION}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
-    TARGET_FILE="${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
-
-    # Download the Proton Experimental binaries
-    echo "Downloading Wine Proton Experimental ${PROTON_VERSION}..."
-    curl -#L "${PROTON_URL}" -o "${TARGET_FILE}"
-
-    # Verify the file exists
-    if [ ! -f "${TARGET_FILE}" ]; then
-        echo "Error: Failed to download Wine Proton Experimental ${PROTON_VERSION}. File not found."
-        exit 1
-    fi
-
-    # Extract the downloaded archive
-    echo "Extracting Wine Proton Experimental ${PROTON_VERSION} binaries..."
-    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
-
-    # Verify the extraction succeeded
-    if [ ! -d "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}" ]; then
-        echo "Error: Failed to extract Wine Proton Experimental ${PROTON_VERSION} binaries."
-        exit 1
-    fi
-
-    # Move binaries to the appropriate location
-    echo "Installing Wine Proton Experimental ${PROTON_VERSION} binaries to ${DEST_DIR}/wine-${PROTON_VERSION}..."
-    mkdir -p "${DEST_DIR}/wine-${PROTON_VERSION}"
-    cp -r "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}"/* "${DEST_DIR}/wine-${PROTON_VERSION}/"
-
-    # Create symbolic link for Proton Experimental
-    echo "Creating symbolic link for Wine Proton Experimental ${PROTON_VERSION}..."
-    ln -sf "${DEST_DIR}/wine-${PROTON_VERSION}/bin/wine" "${SYMLINK_DIR}/wine-${PROTON_VERSION}"
-
-    # Clean up temporary files for Proton Experimental
-    rm -rf "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}"
-    rm -f "${TARGET_FILE}"
-}
-
-# --- Function to install GE-Proton ---
-install_ge_proton() {
-    echo "Processing GE-Proton ${GE_PROTON_VERSION}..."
-
-    # Define download URL and target file
-    GE_PROTON_URL="${BASE_GE_PROTON_URL}/${GE_PROTON_VERSION}/${GE_PROTON_VERSION}.tar.gz"
-    TARGET_FILE="${TMP_DIR}/${GE_PROTON_VERSION}.tar.gz"
-
-    # Download the GE-Proton binaries
-    echo "Downloading GE-Proton ${GE_PROTON_VERSION}..."
-    curl -#L "${GE_PROTON_URL}" -o "${TARGET_FILE}"
-
-    # Verify the file exists
-    if [ ! -f "${TARGET_FILE}" ]; then
-        echo "Error: Failed to download GE-Proton ${GE_PROTON_VERSION}. File not found."
-        exit 1
-    fi
-
-    # Extract the downloaded archive
-    echo "Extracting GE-Proton ${GE_PROTON_VERSION} binaries..."
-    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
-
-    # Verify the extraction succeeded
-    if [ ! -d "${TMP_DIR}/${GE_PROTON_VERSION}" ]; then
-        echo "Error: Failed to extract GE-Proton ${GE_PROTON_VERSION} binaries."
-        exit 1
-    fi
-
-    # Move binaries to the appropriate location
-    echo "Installing GE-Proton ${GE_PROTON_VERSION} binaries to ${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}..."
-    mkdir -p "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}"
-    cp -r "${TMP_DIR}/${GE_PROTON_VERSION}"/* "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}/"
-
-    # Create symbolic link for GE-Proton
-    echo "Creating symbolic link for GE-Proton ${GE_PROTON_VERSION}..."
-    ln -sf "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}/bin/wine" "${SYMLINK_DIR}/ge-proton-${GE_PROTON_VERSION}"
-
-    # Clean up temporary files for GE-Proton
-    rm -rf "${TMP_DIR}/${GE_PROTON_VERSION}"
-    rm -f "${TARGET_FILE}"
-}
-
-# --- Main installation process ---
-
-# Install Wine versions
+# Installation des versions de Wine
 for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
-    install_wine "${WINE_VERSION}"
+    WINE_URL="${BASE_WINE_URL}/${WINE_VERSION}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
+    download_and_install "wine" "${WINE_VERSION}" "${WINE_URL}" "tar.xz" "${DEST_DIR}"
 done
 
-# Install Wine Proton Experimental
-install_proton_exp
+# Installation de Proton Experimental
+PROTON_URL="${BASE_WINE_URL}/${PROTON_VERSION}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
+download_and_install "proton-exp" "${PROTON_VERSION}" "${PROTON_URL}" "tar.xz" "${DEST_DIR}"
 
-# Install GE-Proton
-install_ge_proton
+# Installation de GE-Custom
+GE_CUSTOM_URL="${BASE_GE_CUSTOM_URL}/${GE_CUSTOM_VERSION}/${GE_CUSTOM_VERSION}.tar.gz"
+download_and_install "ge-custom" "${GE_CUSTOM_VERSION}" "${GE_CUSTOM_URL}" "tar.gz" "${DEST_DIR}"
 
-# Final cleanup
-echo "Cleaning up temporary directory..."
+# Nettoyage final
+echo "Nettoyage des fichiers temporaires..."
 rm -rf "${TMP_DIR}"
 
-echo "Installation completed for:"
-echo "  - Wine versions: ${WINE_VERSIONS[*]}"
-echo "  - Wine Proton Experimental ${PROTON_VERSION}"
-echo "  - GE-Proton ${GE_PROTON_VERSION}"
-echo "Symbolic links created in ${SYMLINK_DIR}."
+echo "Installation terminée ! Liens symboliques créés dans ${SYMLINK_DIR}."
 
 clear
 echo "Done"
