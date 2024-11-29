@@ -418,11 +418,23 @@ mkdir -p "${TMP_DIR}"
 
 # Download the Wine binaries
 echo "Downloading Wine ${WINE_VERSION} (${WINE_VARIANT}) for ${ARCHITECTURE}..."
-curl -#LO "${WINE_URL}" -o "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz"
+curl -#L "${WINE_URL}" -o "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz"
+
+# Verify the file exists
+if [ ! -f "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz" ]; then
+    echo "Error: Failed to download Wine binaries. File not found."
+    exit 1
+fi
 
 # Extract the downloaded archive
 echo "Extracting Wine binaries..."
 tar -xf "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz" -C "${TMP_DIR}"
+
+# Verify the extraction succeeded
+if [ ! -d "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}" ]; then
+    echo "Error: Failed to extract Wine binaries."
+    exit 1
+fi
 
 # Move binaries to the appropriate location
 echo "Installing Wine binaries to ${DEST_DIR}..."
@@ -433,6 +445,7 @@ echo "Cleaning up..."
 rm -rf "${TMP_DIR}"
 
 echo "Wine ${WINE_VERSION} (${WINE_VARIANT}) installation completed!"
+
 
 clear
 echo "Done"
