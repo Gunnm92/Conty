@@ -484,6 +484,10 @@ fi
 echo "Installation de GE-Custom version ${GE_CUSTOM_VERSION} dans ${DEST_DIR}..."
 mkdir -p "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
 cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
+if [ -d "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin" ]; then
+    mv "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin" "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
+    rmdir "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files"
+fi
 
 echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
 WINE_BIN_PATH=$(find "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}" -type f -name "wine" | head -n 1)
