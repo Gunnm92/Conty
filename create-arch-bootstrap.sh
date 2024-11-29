@@ -401,23 +401,6 @@ rm -f "${bootstrap}"/etc/fonts/conf.d/10-hinting-slight.conf
 ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/fonts/conf.d
 
 # Add some wine version
-# Configuration des versions, architectures et répertoires
-WINE_VERSIONS=("9.22" "7.20")
-PROTON_VERSION="proton-exp-9.0"
-GE_CUSTOM_VERSION="GE-Custom9-20"
-ARCHITECTURE="${ARCHITECTURE:-amd64}"
-BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
-BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
-
-# Répertoires
-TMP_DIR="${bootstrap:-/tmp}/tmp"
-DEST_DIR="${bootstrap:-/usr/local}/usr/local"
-SYMLINK_DIR="/usr/bin"
-
-# Création des répertoires nécessaires
-mkdir -p "${TMP_DIR}"
-mkdir -p "${DEST_DIR}"
-
 # Fonction générique pour télécharger, extraire et installer
 download_and_install() {
     local NAME=$1
@@ -458,43 +441,26 @@ download_and_install() {
     cp -r "${EXTRACTED_DIR}"/* "${DEST}/${NAME}-${VERSION}/"
 
     echo "Création d'un lien symbolique pour ${NAME} version ${VERSION}..."
-    if [ -x "${DEST}/${NAME}-${VERSION}/bin/wine" ]; then
+    local WINE_BINARY_PATH
+    if [ "${NAME}" == "ge-custom" ]; then
+        WINE_BINARY_PATH="${DEST}/${NAME}-${VERSION}/dist/bin/wine"
+    else
+        WINE_BINARY_PATH="${DEST}/${NAME}-${VERSION}/bin/wine"
+    fi
+
+    if [ -x "${WINE_BINARY_PATH}" ]; then
         if [ -L "${SYMLINK_DIR}/${NAME}-${VERSION}" ]; then
             echo "Attention : Le lien symbolique ${SYMLINK_DIR}/${NAME}-${VERSION} existe déjà. Mise à jour..."
         fi
-        ln -sf "${DEST}/${NAME}-${VERSION}/bin/wine" "${SYMLINK_DIR}/${NAME}-${VERSION}"
+        ln -sf "${WINE_BINARY_PATH}" "${SYMLINK_DIR}/${NAME}-${VERSION}"
         echo "Lien symbolique créé : ${SYMLINK_DIR}/${NAME}-${VERSION}"
     else
-        echo "Erreur : Le binaire wine est introuvable ou non exécutable dans ${DEST}/${NAME}-${VERSION}/bin/wine."
+        echo "Erreur : Le binaire wine est introuvable ou non exécutable dans ${WINE_BINARY_PATH}."
         exit 1
     fi
 
     rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 }
-
-# Nettoyage final
-cleanup() {
-    echo "Nettoyage des fichiers temporaires..."
-    [ -d "${TMP_DIR}" ] && rm -rf "${TMP_DIR}"
-}
-trap cleanup EXIT ERR
-
-# Installation des versions de Wine
-for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
-    WINE_URL="${BASE_WINE_URL}/${WINE_VERSION}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
-    download_and_install "wine" "${WINE_VERSION}" "${WINE_URL}" "tar.xz" "${DEST_DIR}"
-done
-
-# Installation de Proton Experimental
-PROTON_URL="${BASE_WINE_URL}/${PROTON_VERSION}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
-download_and_install "proton-exp" "${PROTON_VERSION}" "${PROTON_URL}" "tar.xz" "${DEST_DIR}"
-
-# Installation de GE-Custom
-GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
-download_and_install "ge-custom" "${GE_CUSTOM_VERSION}" "${GE_CUSTOM_URL}" "tar.gz" "${DEST_DIR}"
-
-# Nettoyage final
-echo "Installation terminée ! Liens symboliques créés dans ${SYMLINK_DIR}."
 
 clear
 echo "Done"
