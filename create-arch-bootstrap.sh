@@ -418,91 +418,104 @@ SYMLINK_DIR="${bootstrap}/usr/bin"
 mkdir -p "${TMP_DIR}"
 mkdir -p "${DEST_DIR}"
 
-
-# Fonction générique pour télécharger, extraire et installer
-download_and_install() {
-    local NAME=$1
-    local VERSION=$2
-    local URL=$3
-    local EXT=$4
-    local DEST=$5
-
-    
-    local TARGET_FILE="${TMP_DIR}/${NAME}-${VERSION}.${EXT}"
-
-    echo "Téléchargement de ${NAME} version ${VERSION}..."
-    if ! curl -#L --retry 3 --fail "${URL}" -o "${TARGET_FILE}"; then
-        echo "Erreur : Échec du téléchargement de ${NAME} version ${VERSION}."
-        exit 1
-    fi
-
-    echo "Extraction de ${NAME} version ${VERSION}..."
-    if [[ "${EXT}" == "tar.xz" || "${EXT}" == "tar.gz" ]]; then
-        echo "Vérification du format de fichier..."
-    if ! file "${TARGET_FILE}" | grep -q 'compressed'; then
-        echo "Erreur : Le fichier téléchargé ne semble pas être une archive valide."
-        exit 1
-    fi
-    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
-    else
-        echo "Format de fichier non pris en charge : ${EXT}"
-        exit 1
-    fi
-
-    local EXTRACTED_DIR=$(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-    if [ ! -d "${EXTRACTED_DIR}" ]; then
-        echo "Erreur : Échec de l'extraction de ${NAME} version ${VERSION}."
-        exit 1
-    fi
-
-    echo "Installation de ${NAME} version ${VERSION} dans ${DEST}..."
-    mkdir -p "${DEST}/${NAME}-${VERSION}"
-    cp -r "${EXTRACTED_DIR}"/* "${DEST}/${NAME}-${VERSION}/"
-
-    echo "Création d'un lien symbolique pour ${NAME} version ${VERSION}..."
-    if [ "${NAME}" == "ge-custom" ]; then
-    WINE_BINARY_PATH="${DEST}/${NAME}-${VERSION}/dist/bin/wine"
-else
-    WINE_BINARY_PATH="${DEST}/${NAME}-${VERSION}/bin/wine"
-fi
-
-if [ -x "${WINE_BINARY_PATH}" ]; then
-    if [ -L "${SYMLINK_DIR}/${NAME}-${VERSION}" ]; then
-        echo "Attention : Le lien symbolique ${SYMLINK_DIR}/${NAME}-${VERSION} existe déjà. Mise à jour..."
-    fi
-    ln -sf "${WINE_BINARY_PATH}" "${SYMLINK_DIR}/${NAME}-${VERSION}"
-echo "Lien symbolique créé : ${SYMLINK_DIR}/${NAME}-${VERSION} avec le binaire ${WINE_BINARY_PATH}"
-        else
-            echo "Erreur : Le binaire wine est introuvable ou non exécutable dans ${DEST}/${NAME}-${VERSION}/bin/wine."
-            exit 1
-        fi
-        else
-    echo "Erreur : Le binaire wine est introuvable ou non exécutable dans ${DEST}/${NAME}-${VERSION}/bin/wine."
-    exit 1
-fi
-
-    rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
-}
-
-# Nettoyage final
-cleanup() {
-    echo "Nettoyage des fichiers temporaires..."
-    [ -d "${TMP_DIR}" ] && rm -rf "${TMP_DIR}"
-}
-trap cleanup EXIT ERR
-
 # Installation des versions de Wine
 for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
     WINE_URL="${BASE_WINE_URL}/${WINE_VERSION}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
-    download_and_install "wine" "${WINE_VERSION}" "${WINE_URL}" "tar.xz" "${DEST_DIR}"
+    TARGET_FILE="${TMP_DIR}/wine-${WINE_VERSION}.tar.xz"
+
+    echo "Téléchargement de Wine version ${WINE_VERSION}..."
+    if ! curl -#L --retry 3 --fail "${WINE_URL}" -o "${TARGET_FILE}"; then
+        echo "Erreur : Échec du téléchargement de Wine version ${WINE_VERSION}."
+        exit 1
+    fi
+
+    echo "Extraction de Wine version ${WINE_VERSION}..."
+    if ! tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"; then
+        echo "Erreur : Échec de l'extraction de Wine version ${WINE_VERSION}."
+        exit 1
+    fi
+
+    EXTRACTED_DIR=$(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+    if [ ! -d "${EXTRACTED_DIR}" ]; then
+        echo "Erreur : Échec de l'extraction de Wine version ${WINE_VERSION}."
+        exit 1
+    fi
+
+    echo "Installation de Wine version ${WINE_VERSION} dans ${DEST_DIR}..."
+    mkdir -p "${DEST_DIR}/wine-${WINE_VERSION}"
+    cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/wine-${WINE_VERSION}/"
+
+    echo "Création d'un lien symbolique pour Wine version ${WINE_VERSION}..."
+    ln -sf "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" "${SYMLINK_DIR}/wine-${WINE_VERSION}"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/wine-${WINE_VERSION}"
+
+    rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 done
 
 # Installation de Proton Experimental
 PROTON_URL="${BASE_WINE_URL}/${PROTON_VERSION}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
+TARGET_FILE="${TMP_DIR}/proton-exp-${PROTON_VERSION}.tar.xz"
+
+    echo "Téléchargement de Proton Experimental version ${PROTON_VERSION}..."
+    if ! curl -#L --retry 3 --fail "${PROTON_URL}" -o "${TARGET_FILE}"; then
+        echo "Erreur : Échec du téléchargement de Proton Experimental version ${PROTON_VERSION}."
+        exit 1
+    fi
+
+    echo "Extraction de Proton Experimental version ${PROTON_VERSION}..."
+    if ! tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"; then
+        echo "Erreur : Échec de l'extraction de Proton Experimental version ${PROTON_VERSION}."
+        exit 1
+    fi
+
+    EXTRACTED_DIR=$(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+    if [ ! -d "${EXTRACTED_DIR}" ]; then
+        echo "Erreur : Échec de l'extraction de Proton Experimental version ${PROTON_VERSION}."
+        exit 1
+    fi
+
+    echo "Installation de Proton Experimental version ${PROTON_VERSION} dans ${DEST_DIR}..."
+    mkdir -p "${DEST_DIR}/proton-exp-${PROTON_VERSION}"
+    cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/proton-exp-${PROTON_VERSION}/"
+
+    echo "Création d'un lien symbolique pour Proton Experimental version ${PROTON_VERSION}..."
+    ln -sf "${DEST_DIR}/proton-exp-${PROTON_VERSION}/bin/wine" "${SYMLINK_DIR}/proton-exp-${PROTON_VERSION}"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/proton-exp-${PROTON_VERSION}"
+
+    rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 download_and_install "proton-exp" "${PROTON_VERSION}" "${PROTON_URL}" "tar.xz" "${DEST_DIR}"
 
 # Installation de GE-Custom
-GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
+GE_CUSTOM_URL="${BASE_GE_CUSTOM_URL}/${GE_CUSTOM_VERSION}/${GE_CUSTOM_VERSION}.tar.gz"
+TARGET_FILE="${TMP_DIR}/ge-custom-${GE_CUSTOM_VERSION}.tar.gz"
+
+    echo "Téléchargement de GE-Custom version ${GE_CUSTOM_VERSION}..."
+    if ! curl -#L --retry 3 --fail "${GE_CUSTOM_URL}" -o "${TARGET_FILE}"; then
+        echo "Erreur : Échec du téléchargement de GE-Custom version ${GE_CUSTOM_VERSION}."
+        exit 1
+    fi
+
+    echo "Extraction de GE-Custom version ${GE_CUSTOM_VERSION}..."
+    if ! tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"; then
+        echo "Erreur : Échec de l'extraction de GE-Custom version ${GE_CUSTOM_VERSION}."
+        exit 1
+    fi
+
+    EXTRACTED_DIR=$(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+    if [ ! -d "${EXTRACTED_DIR}" ]; then
+        echo "Erreur : Échec de l'extraction de GE-Custom version ${GE_CUSTOM_VERSION}."
+        exit 1
+    fi
+
+    echo "Installation de GE-Custom version ${GE_CUSTOM_VERSION} dans ${DEST_DIR}..."
+    mkdir -p "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
+    cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
+
+    echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
+    ln -sf "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/dist/bin/wine" "${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
+
+    rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 download_and_install "ge-custom" "${GE_CUSTOM_VERSION}" "${GE_CUSTOM_URL}" "tar.gz" "${DEST_DIR}"
 
 # Nettoyage final
