@@ -417,12 +417,6 @@ SYMLINK_DIR="/usr/bin" # Modifié pour correspondre à /usr/bin
 # Création des répertoires nécessaires
 mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
 
-# Fonction pour valider l'URL
-        exit 1
-    fi
-} est inaccessible."
-        exit 1
-    fi
 }
 
 # Fonction générique pour télécharger, extraire et installer
@@ -437,7 +431,7 @@ download_and_install() {
     local TARGET_FILE="${TMP_DIR}/${NAME}-${VERSION}.${EXT}"
 
     echo "Téléchargement de ${NAME} version ${VERSION}..."
-    if ! curl -#L "${URL}" -o "${TARGET_FILE}"; then then
+    if ! curl -#L "${URL}" -o "${TARGET_FILE}"; then
         echo "Erreur : Échec du téléchargement de ${NAME} version ${VERSION}."
         exit 1
     fi
