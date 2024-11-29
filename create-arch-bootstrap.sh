@@ -404,7 +404,7 @@ ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/f
 cd "${bootstrap}"/tmp
 curl -#LO https://github.com/Kron4ek/Wine-Builds/releases/download/9.22/wine-9.22-staging-amd64.tar.xz
 tar xf wine-9.22-staging-amd64.tar.xz
-cp "${bootstrap}"/tmp/wine-9.22-staging-amd64 "${bootstrap}"/home/aur/wine
+cp "${bootstrap}"/tmp/wine-9.22-staging-amd64 "${bootstrap}"/usr/local/bin/wine
 
 clear
 echo "Done"
