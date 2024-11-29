@@ -401,50 +401,115 @@ rm -f "${bootstrap}"/etc/fonts/conf.d/10-hinting-slight.conf
 ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/fonts/conf.d
 
 # Add some wine version
-# Define the Wine version and download URL
-WINE_VERSION="9.22"
-WINE_VARIANT="staging"
+# Define Wine versions, Proton Experimental version, and their respective URLs
+WINE_VERSIONS=("9.22" "7.20")
+PROTON_VERSION="proton-exp-9.0"
 ARCHITECTURE="amd64"
-WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download/${WINE_VERSION}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz"
+BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
 
 # Temporary directory within the bootstrap
 TMP_DIR="${bootstrap}/tmp"
 
-# Destination for Wine binaries
+# Destination for binaries
 DEST_DIR="${bootstrap}/usr/local"
 
 # Ensure temporary directory exists
 mkdir -p "${TMP_DIR}"
 
-# Download the Wine binaries
-echo "Downloading Wine ${WINE_VERSION} (${WINE_VARIANT}) for ${ARCHITECTURE}..."
-curl -#L "${WINE_URL}" -o "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz"
+# --- Function to install Wine versions ---
+install_wine() {
+    WINE_VERSION=$1
+    echo "Processing Wine ${WINE_VERSION} (staging) for ${ARCHITECTURE}..."
 
-# Verify the file exists
-if [ ! -f "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz" ]; then
-    echo "Error: Failed to download Wine binaries. File not found."
-    exit 1
-fi
+    # Define download URL and target file
+    WINE_URL="${BASE_WINE_URL}/${WINE_VERSION}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
+    TARGET_FILE="${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
 
-# Extract the downloaded archive
-echo "Extracting Wine binaries..."
-tar -xf "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz" -C "${TMP_DIR}"
+    # Download the Wine binaries
+    echo "Downloading Wine ${WINE_VERSION}..."
+    curl -#L "${WINE_URL}" -o "${TARGET_FILE}"
 
-# Verify the extraction succeeded
-if [ ! -d "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}" ]; then
-    echo "Error: Failed to extract Wine binaries."
-    exit 1
-fi
+    # Verify the file exists
+    if [ ! -f "${TARGET_FILE}" ]; then
+        echo "Error: Failed to download Wine ${WINE_VERSION}. File not found."
+        exit 1
+    fi
 
-# Move binaries to the appropriate location
-echo "Installing Wine binaries to ${DEST_DIR}..."
-cp -r "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}" "${DEST_DIR}"
+    # Extract the downloaded archive
+    echo "Extracting Wine ${WINE_VERSION} binaries..."
+    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
 
-# Clean up the temporary files
-echo "Cleaning up..."
+    # Verify the extraction succeeded
+    if [ ! -d "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}" ]; then
+        echo "Error: Failed to extract Wine ${WINE_VERSION} binaries."
+        exit 1
+    fi
+
+    # Move binaries to the appropriate location
+    echo "Installing Wine ${WINE_VERSION} binaries to ${DEST_DIR}/wine-${WINE_VERSION}..."
+    mkdir -p "${DEST_DIR}/wine-${WINE_VERSION}"
+    cp -r "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}"/* "${DEST_DIR}/wine-${WINE_VERSION}/"
+
+    # Clean up temporary files for this version
+    rm -rf "${TMP_DIR}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}"
+    rm -f "${TARGET_FILE}"
+}
+
+# --- Function to install Wine Proton Experimental ---
+install_proton_exp() {
+    echo "Processing Wine Proton Experimental ${PROTON_VERSION} for ${ARCHITECTURE}..."
+
+    # Define download URL and target file
+    PROTON_URL="${BASE_WINE_URL}/${PROTON_VERSION}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
+    TARGET_FILE="${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}.tar.xz"
+
+    # Download the Proton Experimental binaries
+    echo "Downloading Wine Proton Experimental ${PROTON_VERSION}..."
+    curl -#L "${PROTON_URL}" -o "${TARGET_FILE}"
+
+    # Verify the file exists
+    if [ ! -f "${TARGET_FILE}" ]; then
+        echo "Error: Failed to download Wine Proton Experimental ${PROTON_VERSION}. File not found."
+        exit 1
+    fi
+
+    # Extract the downloaded archive
+    echo "Extracting Wine Proton Experimental ${PROTON_VERSION} binaries..."
+    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
+
+    # Verify the extraction succeeded
+    if [ ! -d "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}" ]; then
+        echo "Error: Failed to extract Wine Proton Experimental ${PROTON_VERSION} binaries."
+        exit 1
+    fi
+
+    # Move binaries to the appropriate location
+    echo "Installing Wine Proton Experimental ${PROTON_VERSION} binaries to ${DEST_DIR}/wine-${PROTON_VERSION}..."
+    mkdir -p "${DEST_DIR}/wine-${PROTON_VERSION}"
+    cp -r "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}"/* "${DEST_DIR}/wine-${PROTON_VERSION}/"
+
+    # Clean up temporary files for Proton Experimental
+    rm -rf "${TMP_DIR}/wine-${PROTON_VERSION}-${ARCHITECTURE}"
+    rm -f "${TARGET_FILE}"
+}
+
+# --- Main installation process ---
+
+# Install Wine versions
+for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
+    install_wine "${WINE_VERSION}"
+done
+
+# Install Wine Proton Experimental
+install_proton_exp
+
+# Final cleanup
+echo "Cleaning up temporary directory..."
 rm -rf "${TMP_DIR}"
 
-echo "Wine ${WINE_VERSION} (${WINE_VARIANT}) installation completed!"
+echo "Installation completed for:"
+echo "  - Wine versions: ${WINE_VERSIONS[*]}"
+echo "  - Wine Proton Experimental ${PROTON_VERSION}"
 
 
 clear
