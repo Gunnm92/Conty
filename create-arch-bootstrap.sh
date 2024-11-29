@@ -401,14 +401,13 @@ rm -f "${bootstrap}"/etc/fonts/conf.d/10-hinting-slight.conf
 ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/fonts/conf.d
 
 # Add some wine version
-# Define Wine versions, Proton Experimental version, GE-Proton version, and their respective URLs
 # Configuration des versions, architectures et répertoires
 WINE_VERSIONS=("9.22" "7.20")
 PROTON_VERSION="proton-exp-9.0"
 GE_CUSTOM_VERSION="GE-Custom9-20"
 ARCHITECTURE="${ARCHITECTURE:-amd64}"
 BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
-BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
+BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
 
 # Répertoires
 TMP_DIR="${bootstrap:-/tmp}/tmp"
@@ -418,6 +417,15 @@ SYMLINK_DIR="/usr/bin" # Modifié pour correspondre à /usr/bin
 # Création des répertoires nécessaires
 mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
 
+# Fonction pour valider l'URL
+check_url() {
+    local URL=$1
+    if ! curl -Is "$URL" | head -n 1 | grep "200 OK" > /dev/null; then
+        echo "Erreur : L'URL ${URL} est inaccessible."
+        exit 1
+    fi
+}
+
 # Fonction générique pour télécharger, extraire et installer
 download_and_install() {
     local NAME=$1
@@ -426,12 +434,13 @@ download_and_install() {
     local EXT=$4
     local DEST=$5
 
+    # Valider l'URL avant le téléchargement
+    check_url "$URL"
+
     local TARGET_FILE="${TMP_DIR}/${NAME}-${VERSION}.${EXT}"
 
     echo "Téléchargement de ${NAME} version ${VERSION}..."
-    curl -#L "${URL}" -o "${TARGET_FILE}"
-
-    if [ ! -f "${TARGET_FILE}" ]; then
+    if ! curl -#L "${URL}" -o "${TARGET_FILE}"; then
         echo "Erreur : Échec du téléchargement de ${NAME} version ${VERSION}."
         exit 1
     fi
@@ -456,6 +465,10 @@ download_and_install() {
 
     echo "Création d'un lien symbolique pour ${NAME} version ${VERSION}..."
     if [ -x "${DEST}/${NAME}-${VERSION}/bin/wine" ]; then
+        if [ -L "${SYMLINK_DIR}/${NAME}-${VERSION}" ]; then
+            echo "Attention : Le lien symbolique ${SYMLINK_DIR}/${NAME}-${VERSION} existe déjà. Mise à jour..."
+            rm -f "${SYMLINK_DIR}/${NAME}-${VERSION}"
+        fi
         ln -sf "${DEST}/${NAME}-${VERSION}/bin/wine" "${SYMLINK_DIR}/${NAME}-${VERSION}"
         echo "Lien symbolique créé : ${SYMLINK_DIR}/${NAME}-${VERSION}"
     else
@@ -464,6 +477,13 @@ download_and_install() {
 
     rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 }
+
+# Nettoyage final
+cleanup() {
+    echo "Nettoyage des fichiers temporaires..."
+    rm -rf "${TMP_DIR}"
+}
+trap cleanup EXIT
 
 # Installation des versions de Wine
 for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
@@ -480,10 +500,8 @@ GE_CUSTOM_URL="${BASE_GE_CUSTOM_URL}/${GE_CUSTOM_VERSION}/${GE_CUSTOM_VERSION}.t
 download_and_install "ge-custom" "${GE_CUSTOM_VERSION}" "${GE_CUSTOM_URL}" "tar.gz" "${DEST_DIR}"
 
 # Nettoyage final
-echo "Nettoyage des fichiers temporaires..."
-rm -rf "${TMP_DIR}"
-
 echo "Installation terminée ! Liens symboliques créés dans ${SYMLINK_DIR}."
+
 
 clear
 echo "Done"
