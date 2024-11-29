@@ -417,8 +417,6 @@ SYMLINK_DIR="/usr/bin" # Modifié pour correspondre à /usr/bin
 # Création des répertoires nécessaires
 mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
 
-}
-
 # Fonction générique pour télécharger, extraire et installer
 download_and_install() {
     local NAME=$1
