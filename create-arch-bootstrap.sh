@@ -412,10 +412,11 @@ BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases
 # Répertoires
 TMP_DIR="${bootstrap:-/tmp}/tmp"
 DEST_DIR="${bootstrap:-/usr/local}/usr/local"
-SYMLINK_DIR="/usr/bin" # Modifié pour correspondre à /usr/bin
+SYMLINK_DIR="/usr/bin"
 
 # Création des répertoires nécessaires
 mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
+
 
 # Fonction générique pour télécharger, extraire et installer
 download_and_install() {
