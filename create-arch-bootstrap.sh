@@ -407,7 +407,7 @@ PROTON_VERSION="proton-exp-9.0"
 GE_CUSTOM_VERSION="GE-Custom9-20"
 ARCHITECTURE="${ARCHITECTURE:-amd64}"
 BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
-BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
+BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
 
 # Répertoires
 TMP_DIR="${bootstrap:-/tmp}/tmp"
@@ -415,8 +415,8 @@ DEST_DIR="${bootstrap:-/usr/local}/usr/local"
 SYMLINK_DIR="/usr/bin"
 
 # Création des répertoires nécessaires
-mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
-
+mkdir -p "${TMP_DIR}"
+mkdir -p "${DEST_DIR}"
 
 # Fonction générique pour télécharger, extraire et installer
 download_and_install() {
@@ -426,17 +426,21 @@ download_and_install() {
     local EXT=$4
     local DEST=$5
 
-    
     local TARGET_FILE="${TMP_DIR}/${NAME}-${VERSION}.${EXT}"
 
     echo "Téléchargement de ${NAME} version ${VERSION}..."
-    if ! curl -#L "${URL}" -o "${TARGET_FILE}"; then
+    if ! curl -#L --retry 3 --fail "${URL}" -o "${TARGET_FILE}"; then
         echo "Erreur : Échec du téléchargement de ${NAME} version ${VERSION}."
         exit 1
     fi
 
     echo "Extraction de ${NAME} version ${VERSION}..."
     if [[ "${EXT}" == "tar.xz" || "${EXT}" == "tar.gz" ]]; then
+        echo "Vérification du format de fichier..."
+        if ! file "${TARGET_FILE}" | grep -q 'compressed'; then
+            echo "Erreur : Le fichier téléchargé ne semble pas être une archive valide."
+            exit 1
+        fi
         tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
     else
         echo "Format de fichier non pris en charge : ${EXT}"
@@ -457,12 +461,12 @@ download_and_install() {
     if [ -x "${DEST}/${NAME}-${VERSION}/bin/wine" ]; then
         if [ -L "${SYMLINK_DIR}/${NAME}-${VERSION}" ]; then
             echo "Attention : Le lien symbolique ${SYMLINK_DIR}/${NAME}-${VERSION} existe déjà. Mise à jour..."
-            rm -f "${SYMLINK_DIR}/${NAME}-${VERSION}"
         fi
         ln -sf "${DEST}/${NAME}-${VERSION}/bin/wine" "${SYMLINK_DIR}/${NAME}-${VERSION}"
         echo "Lien symbolique créé : ${SYMLINK_DIR}/${NAME}-${VERSION}"
     else
-        echo "Erreur : Le binaire wine est introuvable ou non exécutable."
+        echo "Erreur : Le binaire wine est introuvable ou non exécutable dans ${DEST}/${NAME}-${VERSION}/bin/wine."
+        exit 1
     fi
 
     rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
@@ -471,9 +475,9 @@ download_and_install() {
 # Nettoyage final
 cleanup() {
     echo "Nettoyage des fichiers temporaires..."
-    rm -rf "${TMP_DIR}"
+    [ -d "${TMP_DIR}" ] && rm -rf "${TMP_DIR}"
 }
-trap cleanup EXIT
+trap cleanup EXIT ERR
 
 # Installation des versions de Wine
 for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
@@ -486,7 +490,7 @@ PROTON_URL="${BASE_WINE_URL}/${PROTON_VERSION}/wine-${PROTON_VERSION}-${ARCHITEC
 download_and_install "proton-exp" "${PROTON_VERSION}" "${PROTON_URL}" "tar.xz" "${DEST_DIR}"
 
 # Installation de GE-Custom
-GE_CUSTOM_URL="${BASE_GE_CUSTOM_URL}/${GE_CUSTOM_VERSION}/${GE_CUSTOM_VERSION}.tar.gz"
+GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
 download_and_install "ge-custom" "${GE_CUSTOM_VERSION}" "${GE_CUSTOM_URL}" "tar.gz" "${DEST_DIR}"
 
 # Nettoyage final
