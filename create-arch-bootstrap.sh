@@ -418,10 +418,9 @@ SYMLINK_DIR="/usr/bin" # Modifié pour correspondre à /usr/bin
 mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
 
 # Fonction pour valider l'URL
-check_url() {
-    local URL=$1
-    if ! curl -Is "$URL" | head -n 1 | grep "200 OK" > /dev/null; then
-        echo "Erreur : L'URL ${URL} est inaccessible."
+        exit 1
+    fi
+} est inaccessible."
         exit 1
     fi
 }
@@ -434,13 +433,11 @@ download_and_install() {
     local EXT=$4
     local DEST=$5
 
-    # Valider l'URL avant le téléchargement
-    check_url "$URL"
-
+    
     local TARGET_FILE="${TMP_DIR}/${NAME}-${VERSION}.${EXT}"
 
     echo "Téléchargement de ${NAME} version ${VERSION}..."
-    if ! curl -#L "${URL}" -o "${TARGET_FILE}"; then
+    if ! curl -#L "${URL}" -o "${TARGET_FILE}"; then then
         echo "Erreur : Échec du téléchargement de ${NAME} version ${VERSION}."
         exit 1
     fi
