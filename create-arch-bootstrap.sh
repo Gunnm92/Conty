@@ -404,14 +404,14 @@ ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/f
 # Configuration des versions, architectures et répertoires
 WINE_VERSIONS=("9.22" "7.20")
 PROTON_VERSION="proton-exp-9.0"
-GE_CUSTOM_VERSION="GE-Custom9-20"
+GE_CUSTOM_VERSION="9-20"
 ARCHITECTURE="${ARCHITECTURE:-amd64}"
 BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
 BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
 
 # Répertoires
 TMP_DIR="${bootstrap}/tmp"
-DEST_DIR="${bootstrap}/usr/local"
+DEST_DIR="${bootstrap}/usr/local/bin"
 SYMLINK_DIR="${bootstrap}/usr/bin"
 
 # Création des répertoires nécessaires
@@ -446,7 +446,13 @@ for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
     cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/wine-${WINE_VERSION}/"
 
     echo "Création d'un lien symbolique pour Wine version ${WINE_VERSION}..."
+    if [ -f "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" ]; then
     ln -sf "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" "${SYMLINK_DIR}/wine-${WINE_VERSION}"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/wine-${WINE_VERSION}"
+else
+    echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-${WINE_VERSION}/bin."
+    exit 1
+fi
     echo "Lien symbolique créé : ${SYMLINK_DIR}/wine-${WINE_VERSION}"
 
     rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
@@ -479,14 +485,20 @@ TARGET_FILE="${TMP_DIR}/proton-exp-${PROTON_VERSION}.tar.xz"
     cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/proton-exp-${PROTON_VERSION}/"
 
     echo "Création d'un lien symbolique pour Proton Experimental version ${PROTON_VERSION}..."
+    if [ -f "${DEST_DIR}/proton-exp-${PROTON_VERSION}/bin/wine" ]; then
     ln -sf "${DEST_DIR}/proton-exp-${PROTON_VERSION}/bin/wine" "${SYMLINK_DIR}/proton-exp-${PROTON_VERSION}"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/proton-exp-${PROTON_VERSION}"
+else
+    echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/proton-exp-${PROTON_VERSION}/bin."
+    exit 1
+fi
     echo "Lien symbolique créé : ${SYMLINK_DIR}/proton-exp-${PROTON_VERSION}"
 
     rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 download_and_install "proton-exp" "${PROTON_VERSION}" "${PROTON_URL}" "tar.xz" "${DEST_DIR}"
 
 # Installation de GE-Custom
-GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
+GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton${GE_CUSTOM_VERSION}.tar.gz"
 TARGET_FILE="${TMP_DIR}/ge-custom-${GE_CUSTOM_VERSION}.tar.gz"
 
     echo "Téléchargement de GE-Custom version ${GE_CUSTOM_VERSION}..."
@@ -496,6 +508,7 @@ TARGET_FILE="${TMP_DIR}/ge-custom-${GE_CUSTOM_VERSION}.tar.gz"
     fi
 
     echo "Extraction de GE-Custom version ${GE_CUSTOM_VERSION}..."
+    tar -tf "${TARGET_FILE}"  # Affichage du contenu de l'archive pour vérifier la structure
     if ! tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"; then
         echo "Erreur : Échec de l'extraction de GE-Custom version ${GE_CUSTOM_VERSION}."
         exit 1
@@ -512,7 +525,18 @@ TARGET_FILE="${TMP_DIR}/ge-custom-${GE_CUSTOM_VERSION}.tar.gz"
     cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
 
     echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
-    ln -sf "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/dist/bin/wine" "${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
+    if [ ! -f "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin/wine" ]; then
+        echo "Erreur : Le binaire wine n'a pas été trouvé dans le répertoire extrait."
+        exit 1
+    fi
+    if [ -f "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/dist/bin/wine" ]; then
+    ln -sf "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin/wine" "${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
+else
+    echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/dist/bin."
+    exit 1
+fi
+    echo "Lien symbolique pour GE-Custom créé avec succès vers : ${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
     echo "Lien symbolique créé : ${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
 
     rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
