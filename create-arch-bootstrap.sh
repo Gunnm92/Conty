@@ -420,11 +420,8 @@ mkdir -p "${TMP_DIR}" "${SYMLINK_DIR}"
 # Fonction pour valider l'URL
 check_url() {
     local URL=$1
-    if ! curl -Is "$URL" | grep -q "^HTTP/[0-9\.]* 2[0-9][0-9]"; then
+    if ! curl -Is "$URL" | head -n 1 | grep "200 OK" > /dev/null; then
         echo "Erreur : L'URL ${URL} est inaccessible."
-        exit 1
-    fi
-} est inaccessible."
         exit 1
     fi
 }
