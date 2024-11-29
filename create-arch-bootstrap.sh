@@ -400,6 +400,12 @@ chmod 755 "${bootstrap}"/root
 rm -f "${bootstrap}"/etc/fonts/conf.d/10-hinting-slight.conf
 ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/fonts/conf.d
 
+# Add some wine version
+cd /tmp
+curl -#LO https://github.com/Kron4ek/Wine-Builds/releases/download/9.22/wine-9.22-staging-amd64.tar.xz
+tar xf wine-9.22-staging-amd64.tar.xz
+cp wine-9.22-staging-amd64 /home/aur/wine
+
 clear
 echo "Done"
 
