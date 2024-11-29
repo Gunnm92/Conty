@@ -419,12 +419,49 @@ mkdir -p "${TMP_DIR}"
 mkdir -p "${DEST_DIR}"
 
 # Installation des versions de Wine
+
+# Installation de Wine-GE-Custom
+WINE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/wine-ge-custom/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz"
+TARGET_FILE="${TMP_DIR}/wine-ge-custom.tar.xz"
+
+echo "Téléchargement de Wine-GE-Custom..."
+if ! curl -L --retry 3 --fail -o "${TARGET_FILE}" "${WINE_GE_CUSTOM_URL}"; then
+    echo "Erreur : Échec du téléchargement de Wine-GE-Custom."
+    exit 1
+fi
+
+echo "Extraction de Wine-GE-Custom..."
+if ! tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"; then
+    echo "Erreur : Échec de l'extraction de Wine-GE-Custom."
+    exit 1
+fi
+
+EXTRACTED_DIR=$(find "${TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+if [ ! -d "${EXTRACTED_DIR}" ]; then
+    echo "Erreur : Échec de l'extraction de Wine-GE-Custom."
+    exit 1
+fi
+
+echo "Installation de Wine-GE-Custom dans ${DEST_DIR}..."
+mkdir -p "${DEST_DIR}/wine-ge-custom"
+cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/wine-ge-custom/"
+
+echo "Création d'un lien symbolique pour Wine-GE-Custom..."
+if [ -f "${DEST_DIR}/wine-ge-custom/bin/wine" ]; then
+    ln -sf "${DEST_DIR}/wine-ge-custom/bin/wine" "${SYMLINK_DIR}/wine-ge-custom"
+    echo "Lien symbolique créé : ${SYMLINK_DIR}/wine-ge-custom"
+else
+    echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-ge-custom/bin."
+    exit 1
+fi
+
+rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
 for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
     WINE_URL="${BASE_WINE_URL}/${WINE_VERSION}/wine-${WINE_VERSION}-staging-${ARCHITECTURE}.tar.xz"
     TARGET_FILE="${TMP_DIR}/wine-${WINE_VERSION}.tar.xz"
 
     echo "Téléchargement de Wine version ${WINE_VERSION}..."
-    if ! curl -#L --retry 3 --fail "${WINE_URL}" -o "${TARGET_FILE}"; then
+    if ! curl -L --retry 3 --fail "${WINE_URL}" -o "${TARGET_FILE}"; then
         echo "Erreur : Échec du téléchargement de Wine version ${WINE_VERSION}."
         exit 1
     fi
