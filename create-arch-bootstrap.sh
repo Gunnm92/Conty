@@ -401,11 +401,13 @@ rm -f "${bootstrap}"/etc/fonts/conf.d/10-hinting-slight.conf
 ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/fonts/conf.d
 
 # Add some wine version
-# Define Wine versions, Proton Experimental version, and their respective URLs
+# Define Wine versions, Proton Experimental version, GE-Proton version, and their respective URLs
 WINE_VERSIONS=("9.22" "7.20")
 PROTON_VERSION="proton-exp-9.0"
+GE_PROTON_VERSION="GE-Proton8-20"
 ARCHITECTURE="amd64"
 BASE_WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download"
+BASE_GE_PROTON_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download"
 
 # Temporary directory within the bootstrap
 TMP_DIR="${bootstrap}/tmp"
@@ -493,6 +495,44 @@ install_proton_exp() {
     rm -f "${TARGET_FILE}"
 }
 
+# --- Function to install GE-Proton ---
+install_ge_proton() {
+    echo "Processing GE-Proton ${GE_PROTON_VERSION}..."
+
+    # Define download URL and target file
+    GE_PROTON_URL="${BASE_GE_PROTON_URL}/${GE_PROTON_VERSION}/${GE_PROTON_VERSION}.tar.gz"
+    TARGET_FILE="${TMP_DIR}/${GE_PROTON_VERSION}.tar.gz"
+
+    # Download the GE-Proton binaries
+    echo "Downloading GE-Proton ${GE_PROTON_VERSION}..."
+    curl -#L "${GE_PROTON_URL}" -o "${TARGET_FILE}"
+
+    # Verify the file exists
+    if [ ! -f "${TARGET_FILE}" ]; then
+        echo "Error: Failed to download GE-Proton ${GE_PROTON_VERSION}. File not found."
+        exit 1
+    fi
+
+    # Extract the downloaded archive
+    echo "Extracting GE-Proton ${GE_PROTON_VERSION} binaries..."
+    tar -xf "${TARGET_FILE}" -C "${TMP_DIR}"
+
+    # Verify the extraction succeeded
+    if [ ! -d "${TMP_DIR}/${GE_PROTON_VERSION}" ]; then
+        echo "Error: Failed to extract GE-Proton ${GE_PROTON_VERSION} binaries."
+        exit 1
+    fi
+
+    # Move binaries to the appropriate location
+    echo "Installing GE-Proton ${GE_PROTON_VERSION} binaries to ${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}..."
+    mkdir -p "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}"
+    cp -r "${TMP_DIR}/${GE_PROTON_VERSION}"/* "${DEST_DIR}/ge-proton-${GE_PROTON_VERSION}/"
+
+    # Clean up temporary files for GE-Proton
+    rm -rf "${TMP_DIR}/${GE_PROTON_VERSION}"
+    rm -f "${TARGET_FILE}"
+}
+
 # --- Main installation process ---
 
 # Install Wine versions
@@ -503,6 +543,9 @@ done
 # Install Wine Proton Experimental
 install_proton_exp
 
+# Install GE-Proton
+install_ge_proton
+
 # Final cleanup
 echo "Cleaning up temporary directory..."
 rm -rf "${TMP_DIR}"
@@ -510,7 +553,7 @@ rm -rf "${TMP_DIR}"
 echo "Installation completed for:"
 echo "  - Wine versions: ${WINE_VERSIONS[*]}"
 echo "  - Wine Proton Experimental ${PROTON_VERSION}"
-
+echo "  - GE-Proton ${GE_PROTON_VERSION}"
 
 clear
 echo "Done"
