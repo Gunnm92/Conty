@@ -486,7 +486,7 @@ TARGET_FILE="${TMP_DIR}/proton-exp-${PROTON_VERSION}.tar.xz"
 download_and_install "proton-exp" "${PROTON_VERSION}" "${PROTON_URL}" "tar.xz" "${DEST_DIR}"
 
 # Installation de GE-Custom
-GE_CUSTOM_URL="${BASE_GE_CUSTOM_URL}/${GE_CUSTOM_VERSION}/${GE_CUSTOM_VERSION}.tar.gz"
+GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton9-20/GE-Proton9-20.tar.gz"
 TARGET_FILE="${TMP_DIR}/ge-custom-${GE_CUSTOM_VERSION}.tar.gz"
 
     echo "Téléchargement de GE-Custom version ${GE_CUSTOM_VERSION}..."
