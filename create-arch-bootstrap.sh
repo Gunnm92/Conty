@@ -401,10 +401,38 @@ rm -f "${bootstrap}"/etc/fonts/conf.d/10-hinting-slight.conf
 ln -s /usr/share/fontconfig/conf.avail/10-hinting-full.conf "${bootstrap}"/etc/fonts/conf.d
 
 # Add some wine version
-cd "${bootstrap}"/tmp
-curl -#LO https://github.com/Kron4ek/Wine-Builds/releases/download/9.22/wine-9.22-staging-amd64.tar.xz
-tar xf wine-9.22-staging-amd64.tar.xz
-cp -r "${bootstrap}"/tmp/wine-9.22-staging-amd64 "${bootstrap}"/usr/local/bin/wine
+# Define the Wine version and download URL
+WINE_VERSION="9.22"
+WINE_VARIANT="staging"
+ARCHITECTURE="amd64"
+WINE_URL="https://github.com/Kron4ek/Wine-Builds/releases/download/${WINE_VERSION}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz"
+
+# Temporary directory within the bootstrap
+TMP_DIR="${bootstrap}/tmp"
+
+# Destination for Wine binaries
+DEST_DIR="${bootstrap}/usr/local"
+
+# Ensure temporary directory exists
+mkdir -p "${TMP_DIR}"
+
+# Download the Wine binaries
+echo "Downloading Wine ${WINE_VERSION} (${WINE_VARIANT}) for ${ARCHITECTURE}..."
+curl -#LO "${WINE_URL}" -o "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz"
+
+# Extract the downloaded archive
+echo "Extracting Wine binaries..."
+tar -xf "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}.tar.xz" -C "${TMP_DIR}"
+
+# Move binaries to the appropriate location
+echo "Installing Wine binaries to ${DEST_DIR}..."
+cp -r "${TMP_DIR}/wine-${WINE_VERSION}-${WINE_VARIANT}-${ARCHITECTURE}" "${DEST_DIR}"
+
+# Clean up the temporary files
+echo "Cleaning up..."
+rm -rf "${TMP_DIR}"
+
+echo "Wine ${WINE_VERSION} (${WINE_VARIANT}) installation completed!"
 
 clear
 echo "Done"
