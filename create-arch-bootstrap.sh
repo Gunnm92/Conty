@@ -449,7 +449,7 @@ chmod -R +x "${DEST_DIR}/wine-ge-custom/bin"
 
 echo "Création d'un lien symbolique pour Wine-GE-Custom..."
 if [ -f "${DEST_DIR}/wine-ge-custom/bin/wine" ]; then
-    ln -sf $1 $2
+    ln -sf "${WINE_BIN_PATH}" "${SYMLINK_DIR}/wine-ge-custom"
     echo "Lien symbolique créé : ${SYMLINK_DIR}/wine-ge-custom"
 else
     echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-ge-custom/bin."
@@ -486,7 +486,7 @@ for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
 
     echo "Création d'un lien symbolique pour Wine version ${WINE_VERSION}..."
     if [ -f "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" ]; then
-        ln -sf $1 $2
+        ln -sf "${WINE_BIN_PATH}" "${SYMLINK_DIR}/wine-ge-custom"
         echo "Lien symbolique créé : ${SYMLINK_DIR}/wine-${WINE_VERSION}"
     else
         echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-${WINE_VERSION}/bin."
@@ -531,7 +531,7 @@ chmod -R +x "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/bin"
 echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
 WINE_BIN_PATH=$(find "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}" -type f -name "wine" | head -n 1)
 if [ -n "${WINE_BIN_PATH}" ]; then
-    ln -sf $1 $2
+    ln -sf "${WINE_BIN_PATH}" "${SYMLINK_DIR}/wine-ge-custom"
     echo "Lien symbolique créé : ${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
 else
     echo "Erreur : Le binaire wine n'a pas été trouvé dans le répertoire extrait."
