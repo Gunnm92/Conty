@@ -449,7 +449,7 @@ chmod -R +x "${DEST_DIR}/wine-ge-custom/bin"
 
 echo "Création d'un lien symbolique pour Wine-GE-Custom..."
 if [ -f "${DEST_DIR}/wine-ge-custom/bin/wine" ]; then
-    ln -sf "/usr/local/bin/wine-ge-custom/bin/wine" "/usr/bin/wine-ge-custom"
+    ln -sf "${DEST_DIR}/wine-ge-custom/bin/wine" "${SYMLINK_DIR}/wine-ge-custom"
     echo "Lien symbolique créé : /usr/bin/wine-ge-custom"
 else
     echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-ge-custom/bin."
@@ -486,7 +486,7 @@ for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
 
     echo "Création d'un lien symbolique pour Wine version ${WINE_VERSION}..."
     if [ -f "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" ]; then
-        ln -sf "/usr/local/bin/wine-${WINE_VERSION}/bin/wine" "/usr/bin/wine-${WINE_VERSION}"
+        ln -sf "${DEST_DIR}/wine-$1/bin/wine" "${SYMLINK_DIR}/wine-$1"
         echo "Lien symbolique créé : /usr/bin/wine-${WINE_VERSION}"
     else
         echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-${WINE_VERSION}/bin."
@@ -523,15 +523,15 @@ fi
 echo "Installation de GE-Custom version ${GE_CUSTOM_VERSION} dans ${DEST_DIR}..."
 mkdir -p "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
 cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
-if [ -d "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin" ]; then
-    mv "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin" "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
-    rmdir "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files"
+if [ -d "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files" ]; then
+    mv "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files"/* "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
+    rm -rf "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files"
 fi
 chmod -R +x "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/bin"
 echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
 WINE_BIN_PATH=$(find "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}" -type f -name "wine" | head -n 1)
 if [ -n "${WINE_BIN_PATH}" ]; then
-    ln -sf "${WINE_BIN_PATH}" "/usr/bin/ge-custom-${GE_CUSTOM_VERSION}"
+    ln -sf "${WINE_BIN_PATH}" "${SYMLINK_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
     echo "Lien symbolique créé : /usr/bin/ge-custom-${GE_CUSTOM_VERSION}"
 else
     echo "Erreur : Le binaire wine n'a pas été trouvé dans le répertoire extrait."
@@ -539,9 +539,6 @@ else
 fi
 
 rm -rf "${EXTRACTED_DIR}" "${TARGET_FILE}"
-
-# Nettoyage final
-echo "Installation terminée ! Liens symboliques créés dans ${SYMLINK_DIR}."
 
 # Nettoyage final
 echo "Installation terminée ! Liens symboliques créés dans ${SYMLINK_DIR}."
