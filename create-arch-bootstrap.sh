@@ -482,7 +482,7 @@ for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
     echo "Installation de Wine version ${WINE_VERSION} dans ${DEST_DIR}..."
     mkdir -p "${DEST_DIR}/wine-${WINE_VERSION}"
     cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/wine-${WINE_VERSION}/"
-chmod -R +x "${DEST_DIR}/wine-${WINE_VERSION}/bin"
+    chmod -R +x "${DEST_DIR}/wine-${WINE_VERSION}/bin"
 
     echo "Création d'un lien symbolique pour Wine version ${WINE_VERSION}..."
     if [ -f "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" ]; then
@@ -523,12 +523,11 @@ fi
 echo "Installation de GE-Custom version ${GE_CUSTOM_VERSION} dans ${DEST_DIR}..."
 mkdir -p "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}"
 cp -r "${EXTRACTED_DIR}"/* "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
-chmod -R +x "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/bin"
 if [ -d "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin" ]; then
     mv "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files/bin" "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/"
     rmdir "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/files"
 fi
-
+chmod -R +x "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/bin"
 echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
 WINE_BIN_PATH=$(find "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}" -type f -name "wine" | head -n 1)
 if [ -n "${WINE_BIN_PATH}" ]; then
