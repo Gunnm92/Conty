@@ -412,7 +412,7 @@ BASE_GE_CUSTOM_URL="https://github.com/GloriousEggroll/proton-ge-custom/releases
 # Répertoires
 TMP_DIR="${bootstrap}/tmp"
 DEST_DIR="${bootstrap}/usr/local/bin"
-SYMLINK_DIR="/usr/bin"
+SYMLINK_DIR="${bootstrap}/usr/bin"
 
 # Création des répertoires nécessaires
 mkdir -p "${TMP_DIR}"
@@ -449,7 +449,7 @@ chmod -R +x "${DEST_DIR}/wine-ge-custom/bin"
 
 echo "Création d'un lien symbolique pour Wine-GE-Custom..."
 if [ -f "${DEST_DIR}/wine-ge-custom/bin/wine" ]; then
-    ln -sf "${DEST_DIR}/wine-ge-custom/bin/wine" "/usr/bin/wine-ge-custom"
+    ln -sf "/usr/local/bin/wine-ge-custom/bin/wine" "/usr/bin/wine-ge-custom"
     echo "Lien symbolique créé : /usr/bin/wine-ge-custom"
 else
     echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-ge-custom/bin."
@@ -486,7 +486,7 @@ for WINE_VERSION in "${WINE_VERSIONS[@]}"; do
 
     echo "Création d'un lien symbolique pour Wine version ${WINE_VERSION}..."
     if [ -f "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" ]; then
-        ln -sf "${DEST_DIR}/wine-${WINE_VERSION}/bin/wine" "/usr/bin/wine-${WINE_VERSION}"
+        ln -sf "/usr/local/bin/wine-$1/bin/wine" "/usr/bin/wine-${WINE_VERSION}"
         echo "Lien symbolique créé : /usr/bin/wine-${WINE_VERSION}"
     else
         echo "Erreur : Le binaire wine n'a pas été trouvé dans ${DEST_DIR}/wine-${WINE_VERSION}/bin."
@@ -531,8 +531,8 @@ chmod -R +x "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}/bin"
 echo "Création d'un lien symbolique pour GE-Custom version ${GE_CUSTOM_VERSION}..."
 WINE_BIN_PATH=$(find "${DEST_DIR}/ge-custom-${GE_CUSTOM_VERSION}" -type f -name "wine" | head -n 1)
 if [ -n "${WINE_BIN_PATH}" ]; then
-    ln -sf "${WINE_BIN_PATH}" "/usr/bin/ge-custom-${GE_CUSTOM_VERSION}"
-    echo "Lien symbolique créé : /usr/bin/ge-custom-${GE_CUSTOM_VERSION}"
+    ln -sf "${WINE_BIN_PATH}" "/usr/bin/ge-custom-${GE_CUSTOM_VERSION}-link"
+    echo "Lien symbolique créé : /usr/bin/ge-custom-${GE_CUSTOM_VERSION}-link"
 else
     echo "Erreur : Le binaire wine n'a pas été trouvé dans le répertoire extrait."
     exit 1
